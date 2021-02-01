@@ -21,11 +21,13 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <EditText
+            android:id="@+id/mensaje"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1" />
 
         <Button
+            android:id="@+id/enviar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=">" />
