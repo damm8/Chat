@@ -7,11 +7,15 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
 import com.company.chat.databinding.FragmentChatBinding;
+import com.company.chat.databinding.ViewholderChatBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -28,7 +32,8 @@ public class ChatFragment extends Fragment {
 
     private FragmentChatBinding binding;
     private FirebaseFirestore mDb;
-    List<Mensaje> mensajes;
+    private String email;
+    private List<Mensaje> mensajes = new ArrayList<>();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -40,6 +45,7 @@ public class ChatFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         mDb = FirebaseFirestore.getInstance();
+        email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
 
         binding.enviar.setOnClickListener(v -> {
             String mensaje = binding.mensaje.getText().toString();
@@ -50,15 +56,55 @@ public class ChatFragment extends Fragment {
                     .add(new Mensaje(mensaje, autor, fecha));
         });
 
+        ChatAdapter chatAdapter = new ChatAdapter();
+        binding.recyclerView.setAdapter(chatAdapter);
 
         mDb.collection("mensajes").addSnapshotListener((value, error) -> {
-            List<Mensaje> mensajes = new ArrayList<>();
+            mensajes = new ArrayList<>();
 
             for(QueryDocumentSnapshot d: value){
                 mensajes.add(new Mensaje(d.getString("mensaje"), d.getString("autor"), d.getString("fecha")));
             }
+            chatAdapter.notifyDataSetChanged();
         });
+
+
     }
 
+    class ChatAdapter extends RecyclerView.Adapter<ChatViewHolder>{
 
+        @NonNull
+        @Override
+        public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            Log.e("ABCD","creando un viewholder");
+            return new ChatViewHolder(ViewholderChatBinding.inflate(getLayoutInflater(), parent, false));
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
+            Log.e("ABCD","Rellendando el viewholder " + position);
+            Mensaje mensaje = mensajes.get(position);
+
+            if(mensaje.autor.equals(email)){
+                holder.binding.todo.setGravity(Gravity.END);
+            }
+            holder.binding.autor.setText(mensaje.autor);
+            holder.binding.mensaje.setText(mensaje.mensaje);
+            holder.binding.fecha.setText(mensaje.fecha);
+        }
+
+        @Override
+        public int getItemCount() {
+            Log.e("ABCD", "Nuemros chats " + mensajes.size());
+            return mensajes.size();
+        }
+    }
+
+    static class ChatViewHolder extends RecyclerView.ViewHolder{
+        ViewholderChatBinding binding;
+        public ChatViewHolder(@NonNull ViewholderChatBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+    }
 }
