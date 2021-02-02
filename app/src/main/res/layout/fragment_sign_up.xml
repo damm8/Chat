@@ -6,7 +6,15 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:layout_gravity="center"
+    android:divider="#000"
     tools:context=".SignInFragment">
+
+    <ImageView
+        android:id="@+id/foto"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_baseline_add_reaction_24"/>
 
     <EditText
         android:id="@+id/email"
@@ -21,28 +29,18 @@
         android:layout_height="wrap_content"
         android:hint="Password"/>
 
+    <EditText
+        android:id="@+id/name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Name"/>
+
     <Button
-        android:id="@+id/emailSignIn"
+        android:id="@+id/emailSignUp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="SIGN IN"/>
+        android:text="SIGN UP"/>
 
-    <TextView
-        android:id="@+id/goto_register"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Crear cuenta"/>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_margin="32dp"
-        android:background="#666"/>
-
-    <com.google.android.gms.common.SignInButton
-        android:id="@+id/googleSignIn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
 
 </LinearLayout>

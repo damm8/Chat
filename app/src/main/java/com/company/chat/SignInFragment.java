@@ -1,7 +1,10 @@
 package com.company.chat;
 
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -14,8 +17,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.company.chat.databinding.FragmentSignInBinding;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
+import com.google.firebase.auth.GoogleAuthProvider;
 
 
 public class SignInFragment extends Fragment {
@@ -36,11 +43,15 @@ public class SignInFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         mNav = Navigation.findNavController(view);
 
+        binding.gotoRegister.setOnClickListener(v -> {
+            mNav.navigate(R.id.action_signInFragment_to_signUpFragment);
+        });
+
         binding.emailSignIn.setOnClickListener(v -> {
             String email = binding.email.getText().toString();
             String password = binding.password.getText().toString();
 
-            mAuth.createUserWithEmailAndPassword(email, password)
+            mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             mNav.navigate(R.id.action_signInFragment_to_chatFragment);
@@ -49,5 +60,15 @@ public class SignInFragment extends Fragment {
                         }
                     });
         });
+
+        binding.googleSignIn.setOnClickListener(v -> {
+            signInClient.launch(GoogleSignIn.getClient(requireContext(), new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken(getString(R.string.default_web_client_id)).build()).getSignInIntent());
+        });
     }
+
+    ActivityResultLauncher<Intent> signInClient = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        try {
+            FirebaseAuth.getInstance().signInWithCredential(GoogleAuthProvider.getCredential(GoogleSignIn.getSignedInAccountFromIntent(result.getData()).getResult(ApiException.class).getIdToken(), null));
+        } catch (ApiException e) {}
+    });
 }

@@ -12,16 +12,14 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 
+import com.bumptech.glide.Glide;
 import com.company.chat.databinding.FragmentChatBinding;
 import com.company.chat.databinding.ViewholderChatBinding;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.EventListener;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,7 +30,7 @@ public class ChatFragment extends Fragment {
 
     private FragmentChatBinding binding;
     private FirebaseFirestore mDb;
-    private String email;
+    private FirebaseUser user;
     private List<Mensaje> mensajes = new ArrayList<>();
 
     @Override
@@ -45,30 +43,26 @@ public class ChatFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         mDb = FirebaseFirestore.getInstance();
-        email = FirebaseAuth.getInstance().getCurrentUser().getEmail();
+        user = FirebaseAuth.getInstance().getCurrentUser();
 
         binding.enviar.setOnClickListener(v -> {
             String mensaje = binding.mensaje.getText().toString();
-            String autor = FirebaseAuth.getInstance().getCurrentUser().getEmail();
             String fecha = LocalDateTime.now().toString();
 
             mDb.collection("mensajes")
-                    .add(new Mensaje(mensaje, autor, fecha));
+                    .add(new Mensaje(user.getEmail(), user.getDisplayName(), user.getPhotoUrl().toString(), mensaje, fecha));
         });
 
         ChatAdapter chatAdapter = new ChatAdapter();
         binding.recyclerView.setAdapter(chatAdapter);
 
-        mDb.collection("mensajes").addSnapshotListener((value, error) -> {
-            mensajes = new ArrayList<>();
-
-            for(QueryDocumentSnapshot d: value){
-                mensajes.add(new Mensaje(d.getString("mensaje"), d.getString("autor"), d.getString("fecha")));
-            }
-            chatAdapter.notifyDataSetChanged();
-        });
-
-
+        mDb.collection("mensajes")
+                .orderBy("fecha")
+                .addSnapshotListener((value, error) -> {
+                    mensajes = new ArrayList<>();
+                    value.forEach(d -> mensajes.add(new Mensaje(d)));
+                    chatAdapter.notifyDataSetChanged();
+                });
     }
 
     class ChatAdapter extends RecyclerView.Adapter<ChatViewHolder>{
@@ -76,26 +70,26 @@ public class ChatFragment extends Fragment {
         @NonNull
         @Override
         public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            Log.e("ABCD","creando un viewholder");
             return new ChatViewHolder(ViewholderChatBinding.inflate(getLayoutInflater(), parent, false));
         }
 
         @Override
         public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
-            Log.e("ABCD","Rellendando el viewholder " + position);
             Mensaje mensaje = mensajes.get(position);
 
-            if(mensaje.autor.equals(email)){
+            if(mensaje.autorEmail != null && mensaje.autorEmail.equals(user.getEmail())){
                 holder.binding.todo.setGravity(Gravity.END);
+            } else {
+                holder.binding.todo.setGravity(Gravity.START);
             }
-            holder.binding.autor.setText(mensaje.autor);
+            holder.binding.autor.setText(mensaje.autorNombre);
             holder.binding.mensaje.setText(mensaje.mensaje);
             holder.binding.fecha.setText(mensaje.fecha);
+            Glide.with(requireView()).load(mensaje.autorFoto).into(holder.binding.foto);
         }
 
         @Override
         public int getItemCount() {
-            Log.e("ABCD", "Nuemros chats " + mensajes.size());
             return mensajes.size();
         }
     }
