@@ -6,8 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:layout_gravity="center"
-    android:divider="#000"
-    tools:context=".SignInFragment">
+    tools:context=".SignUpFragment">
 
     <ImageView
         android:id="@+id/foto"
@@ -40,7 +39,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="SIGN UP"/>
-
-
-
+    
 </LinearLayout>

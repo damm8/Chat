@@ -51,6 +51,8 @@ public class ChatFragment extends Fragment {
 
             mDb.collection("mensajes")
                     .add(new Mensaje(user.getEmail(), user.getDisplayName(), user.getPhotoUrl().toString(), mensaje, fecha));
+
+            binding.mensaje.setText("");
         });
 
         ChatAdapter chatAdapter = new ChatAdapter();
