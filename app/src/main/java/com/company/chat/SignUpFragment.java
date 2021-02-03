@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -56,27 +57,51 @@ public class SignUpFragment extends Fragment {
             String password = binding.password.getText().toString();
             String name = binding.name.getText().toString();
 
-            mAuth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
+            boolean valid = true;
 
-                            FirebaseStorage.getInstance()
-                                    .getReference("avatars/"+ UUID.randomUUID())
-                                    .putFile(viewModel.fotoUri)
-                                    .continueWithTask(task2 ->  task2.getResult().getStorage().getDownloadUrl())
-                                    .addOnSuccessListener(url -> {
-                                        mAuth.getCurrentUser().updateProfile(
-                                                new UserProfileChangeRequest.Builder()
-                                                        .setDisplayName(name)
-                                                        .setPhotoUri(url)
-                                                        .build()
-                                        );
+            if (email.isEmpty()) {
+                binding.email.setError("Required");
+                valid = false;
+            }
+            if (password.isEmpty()) {
+                binding.password.setError("Required");
+                valid = false;
+            }
+            if (name.isEmpty()) {
+               binding.name.setError("Required");
+               valid = false;
+            }
+            if (viewModel.fotoUri == null) {
+               Toast.makeText(requireContext(), "Seleccione una foto", Toast.LENGTH_SHORT).show();
+               valid = false;
+            }
 
-                                        mNav.navigate(R.id.action_signUpFragment_to_chatFragment);
-                                    });
+            if (valid) {
 
-                        }
-                    });
+                mAuth.createUserWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+
+                                FirebaseStorage.getInstance()
+                                        .getReference("avatars/" + UUID.randomUUID())
+                                        .putFile(viewModel.fotoUri)
+                                        .continueWithTask(task2 -> task2.getResult().getStorage().getDownloadUrl())
+                                        .addOnSuccessListener(url -> {
+                                            mAuth.getCurrentUser().updateProfile(
+                                                    new UserProfileChangeRequest.Builder()
+                                                            .setDisplayName(name)
+                                                            .setPhotoUri(url)
+                                                            .build()
+                                            );
+
+                                            mNav.navigate(R.id.action_signUpFragment_to_chatFragment);
+                                        });
+
+                            } else {
+                                Toast.makeText(requireContext(), task.getException().getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
         });
 
         binding.foto.setOnClickListener(v -> {

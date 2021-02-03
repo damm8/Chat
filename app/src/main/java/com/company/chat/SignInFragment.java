@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.company.chat.databinding.FragmentSignInBinding;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -51,14 +52,28 @@ public class SignInFragment extends Fragment {
             String email = binding.email.getText().toString();
             String password = binding.password.getText().toString();
 
-            mAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            mNav.navigate(R.id.action_signInFragment_to_chatFragment);
-                        } else {
-                            Log.e("ABCD", task.getResult().toString());
-                        }
-                    });
+            boolean valid = true;
+
+            if (email.isEmpty()) {
+                binding.email.setError("Required");
+                valid = false;
+            }
+            if (password.isEmpty()) {
+                binding.password.setError("Required");
+                valid = false;
+            }
+
+            if (valid) {
+
+                mAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                mNav.navigate(R.id.action_signInFragment_to_chatFragment);
+                            } else {
+                                Toast.makeText(requireContext(), task.getException().getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
         });
 
         binding.googleSignIn.setOnClickListener(v -> {
