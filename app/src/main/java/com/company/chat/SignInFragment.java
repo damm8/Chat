@@ -84,6 +84,7 @@ public class SignInFragment extends Fragment {
     ActivityResultLauncher<Intent> signInClient = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
         try {
             FirebaseAuth.getInstance().signInWithCredential(GoogleAuthProvider.getCredential(GoogleSignIn.getSignedInAccountFromIntent(result.getData()).getResult(ApiException.class).getIdToken(), null));
+            mNav.navigate(R.id.action_signInFragment_to_chatFragment);
         } catch (ApiException e) {}
     });
 }

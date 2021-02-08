@@ -28,8 +28,6 @@ import java.util.UUID;
 
 public class SignUpFragment extends Fragment {
 
-    private SignUpViewModel viewModel;
-
     public static class SignUpViewModel extends ViewModel {
         Uri fotoUri;
     }
@@ -37,6 +35,7 @@ public class SignUpFragment extends Fragment {
     private FragmentSignUpBinding binding;
     private FirebaseAuth mAuth;
     private NavController mNav;
+    private SignUpViewModel viewModel;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
