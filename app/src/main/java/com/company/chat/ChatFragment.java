@@ -59,11 +59,17 @@ public class ChatFragment extends Fragment {
         binding.recyclerView.setAdapter(chatAdapter);
 
         mDb.collection("mensajes")
-                .orderBy("fecha")
                 .addSnapshotListener((value, error) -> {
-                    mensajes = new ArrayList<>();
-                    value.forEach(d -> mensajes.add(new Mensaje(d)));
-                    chatAdapter.notifyDataSetChanged();
+                    value.forEach(m -> {
+                        String email = m.getString("email");
+                        String nombre = m.getString("nombre");
+                        String fecha = m.getString("fecha");
+                        String texto = m.getString("mensaje");
+                        String foto = m.getString("foto");
+
+                        Mensaje mensaje = new Mensaje(email, nombre, foto, texto, fecha);
+                        mensajes.add(mensaje);
+                    });
                 });
     }
 

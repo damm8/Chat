@@ -1,7 +1,5 @@
 package com.company.chat;
 
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-
 public class Mensaje {
     public String autorEmail;
     public String autorNombre;
@@ -15,13 +13,5 @@ public class Mensaje {
         this.autorFoto = autorFoto;
         this.mensaje = mensaje;
         this.fecha = fecha;
-    }
-
-    public Mensaje(QueryDocumentSnapshot document){
-        this.autorEmail = document.getString("autorEmail");
-        this.autorNombre = document.getString("autorNombre");
-        this.autorFoto = document.getString("autorFoto");
-        this.mensaje = document.getString("mensaje");
-        this.fecha = document.getString("fecha");
     }
 }
