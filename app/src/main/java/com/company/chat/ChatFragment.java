@@ -50,7 +50,7 @@ public class ChatFragment extends Fragment {
             String fecha = LocalDateTime.now().toString();
 
             mDb.collection("mensajes")
-                    .add(new Mensaje(user.getEmail(), user.getDisplayName(), user.getPhotoUrl().toString(), mensaje, fecha));
+                    .add(new Mensaje(null, user.getDisplayName(), user.getPhotoUrl().toString(), mensaje, fecha));
 
             binding.mensaje.setText("");
         });
@@ -58,18 +58,24 @@ public class ChatFragment extends Fragment {
         ChatAdapter chatAdapter = new ChatAdapter();
         binding.recyclerView.setAdapter(chatAdapter);
 
+        // collection ~~~ tabla
+        // document ~~~ fila
         mDb.collection("mensajes")
+                .orderBy("fecha")
                 .addSnapshotListener((value, error) -> {
-                    value.forEach(m -> {
-                        String email = m.getString("email");
-                        String nombre = m.getString("nombre");
+                    for (QueryDocumentSnapshot m: value){
+
+                        String email = m.getString("autorEmail");
+                        String nombre = m.getString("autorNombre");
                         String fecha = m.getString("fecha");
                         String texto = m.getString("mensaje");
-                        String foto = m.getString("foto");
+                        String foto = m.getString("autorFoto");
 
                         Mensaje mensaje = new Mensaje(email, nombre, foto, texto, fecha);
                         mensajes.add(mensaje);
-                    });
+                    }
+                    chatAdapter.notifyDataSetChanged();
+                    binding.recyclerView.scrollToPosition(mensajes.size() - 1);
                 });
     }
 
@@ -86,8 +92,10 @@ public class ChatFragment extends Fragment {
             Mensaje mensaje = mensajes.get(position);
 
             if(mensaje.autorEmail != null && mensaje.autorEmail.equals(user.getEmail())){
+                Log.e("ABCD", "autor igual");
                 holder.binding.todo.setGravity(Gravity.END);
             } else {
+                Log.e("ABCD", "autor diferente");
                 holder.binding.todo.setGravity(Gravity.START);
             }
             holder.binding.autor.setText(mensaje.autorNombre);
