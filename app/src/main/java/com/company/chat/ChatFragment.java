@@ -30,8 +30,8 @@ public class ChatFragment extends Fragment {
 
     private FragmentChatBinding binding;
     private FirebaseFirestore mDb;
-    private FirebaseUser user;
     private List<Mensaje> mensajes = new ArrayList<>();
+    private FirebaseUser user;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
