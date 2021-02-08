@@ -2,6 +2,8 @@ package com.company.chat;
 
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -20,16 +22,19 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.storage.FirebaseStorage;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 
 public class ChatFragment extends Fragment {
 
     private FragmentChatBinding binding;
     private FirebaseFirestore mDb;
+    private FirebaseStorage storage;
     private List<Mensaje> mensajes = new ArrayList<>();
     private FirebaseUser user;
 
@@ -43,6 +48,7 @@ public class ChatFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         mDb = FirebaseFirestore.getInstance();
+        storage = FirebaseStorage.getInstance();
         user = FirebaseAuth.getInstance().getCurrentUser();
 
         binding.enviar.setOnClickListener(v -> {
@@ -50,9 +56,13 @@ public class ChatFragment extends Fragment {
             String fecha = LocalDateTime.now().toString();
 
             mDb.collection("mensajes")
-                    .add(new Mensaje(null, user.getDisplayName(), user.getPhotoUrl().toString(), mensaje, fecha));
+                    .add(new Mensaje(user.getEmail(), user.getDisplayName(), user.getPhotoUrl().toString(), mensaje, fecha, null));
 
             binding.mensaje.setText("");
+        });
+
+        binding.adjuntar.setOnClickListener(v -> {
+            galeria.launch("image/*");
         });
 
         ChatAdapter chatAdapter = new ChatAdapter();
@@ -60,6 +70,7 @@ public class ChatFragment extends Fragment {
 
         // collection ~~~ tabla
         // document ~~~ fila
+
         mDb.collection("mensajes")
                 .orderBy("fecha")
                 .addSnapshotListener((value, error) -> {
@@ -70,8 +81,9 @@ public class ChatFragment extends Fragment {
                         String fecha = m.getString("fecha");
                         String texto = m.getString("mensaje");
                         String foto = m.getString("autorFoto");
+                        String adjunto = m.getString("adjunto");
 
-                        Mensaje mensaje = new Mensaje(email, nombre, foto, texto, fecha);
+                        Mensaje mensaje = new Mensaje(email, nombre, foto, texto, fecha, adjunto);
                         mensajes.add(mensaje);
                     }
                     chatAdapter.notifyDataSetChanged();
@@ -92,14 +104,24 @@ public class ChatFragment extends Fragment {
             Mensaje mensaje = mensajes.get(position);
 
             if(mensaje.autorEmail != null && mensaje.autorEmail.equals(user.getEmail())){
-                Log.e("ABCD", "autor igual");
                 holder.binding.todo.setGravity(Gravity.END);
             } else {
-                Log.e("ABCD", "autor diferente");
                 holder.binding.todo.setGravity(Gravity.START);
             }
             holder.binding.autor.setText(mensaje.autorNombre);
-            holder.binding.mensaje.setText(mensaje.mensaje);
+
+            if(mensaje.adjunto == null) {
+                holder.binding.adjunto.setVisibility(View.GONE);
+                holder.binding.mensaje.setVisibility(View.VISIBLE);
+
+                holder.binding.mensaje.setText(mensaje.mensaje);
+            } else {
+                holder.binding.adjunto.setVisibility(View.VISIBLE);
+                holder.binding.mensaje.setVisibility(View.GONE);
+
+                Glide.with(requireView()).load(mensaje.adjunto).into(holder.binding.adjunto);
+            }
+
             holder.binding.fecha.setText(mensaje.fecha);
             Glide.with(requireView()).load(mensaje.autorFoto).into(holder.binding.foto);
         }
@@ -117,4 +139,17 @@ public class ChatFragment extends Fragment {
             this.binding = binding;
         }
     }
+
+    private final ActivityResultLauncher<String> galeria = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+        storage.getReference("adjuntos/"+ UUID.randomUUID())
+                .putFile(uri)
+                .continueWithTask(task -> task.getResult().getStorage().getDownloadUrl())
+                .addOnSuccessListener(url -> {
+                    String fecha = LocalDateTime.now().toString();
+
+                    mDb.collection("mensajes")
+                            .add(new Mensaje(user.getEmail(), user.getDisplayName(), user.getPhotoUrl().toString(), null, fecha, url.toString()));
+
+                });
+    });
 }
