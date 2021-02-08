@@ -74,6 +74,7 @@ public class ChatFragment extends Fragment {
         mDb.collection("mensajes")
                 .orderBy("fecha")
                 .addSnapshotListener((value, error) -> {
+                    mensajes.clear();
                     for (QueryDocumentSnapshot m: value){
 
                         String email = m.getString("autorEmail");
